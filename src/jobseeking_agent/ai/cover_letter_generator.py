@@ -2,6 +2,7 @@ from pathlib import Path
 
 from jobseeking_agent.config import get_settings
 from jobseeking_agent.database.models import Job
+from jobseeking_agent.profile import load_profile
 
 
 def generate_cover_letter(job: Job, output_dir: str = "data/cover_letters") -> Path:
@@ -15,7 +16,8 @@ def generate_cover_letter(job: Job, output_dir: str = "data/cover_letters") -> P
     filename = f"{job_id}-{safe_company or 'company'}-cover-letter.md".replace(" ", "-")
     path = Path(output_dir) / filename
 
-    candidate_name = settings.candidate_name or "Candidate"
+    profile = load_profile()
+    candidate_name = profile.name or settings.candidate_name or "Candidate"
     body = f"""# Cover Letter Draft
 
 Dear Hiring Team,

@@ -1,3 +1,7 @@
+import subprocess
+import sys
+from pathlib import Path
+
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -50,6 +54,37 @@ def init() -> None:
     console.print("Create .env from .env.example, add your resume, then run:")
     console.print("[bold]jobseek db init[/bold]")
     console.print("[bold]jobseek doctor[/bold]")
+
+
+@app.command()
+def desktop() -> None:
+    """Start the local desktop application."""
+    from jobseeking_agent.desktop_app import main
+
+    main()
+
+
+@app.command()
+def web(
+    host: str = typer.Option("127.0.0.1", "--host"),
+    port: int = typer.Option(8501, "--port"),
+) -> None:
+    """Start the local web dashboard."""
+    dashboard_path = Path(__file__).with_name("web_app.py")
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "streamlit",
+            "run",
+            str(dashboard_path),
+            "--server.address",
+            host,
+            "--server.port",
+            str(port),
+        ],
+        check=False,
+    )
 
 
 @db_app.command("init")

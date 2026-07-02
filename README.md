@@ -1,8 +1,8 @@
 # JobSeekingAgent
 
-JobSeekingAgent is a cross-platform job seeking automation project for macOS, Windows, and Linux. It is designed as a Python-first local agent: a command-line tool handles scraping, matching, resume customization, application automation, and tracking; a web dashboard can be added later on top of the same core modules.
+JobSeekingAgent is a cross-platform job seeking automation project for macOS, Windows, and Linux. It is designed as a local desktop agent: a Qt desktop app provides the main experience, while a command-line tool handles scraping, matching, resume customization, application automation, and tracking.
 
-This shape is intentional. Job search automation often needs local browser sessions, user-controlled credentials, resumes stored on disk, and careful review before submitting applications. A local CLI core is easier to test, safer with secrets, and portable across operating systems. A web UI can still be added later for review queues, analytics, and manual approvals.
+This shape is intentional. Job search automation often needs local browser sessions, user-controlled credentials, resumes stored on disk, and careful review before submitting applications. A local desktop app keeps sensitive data on the user's machine while still feeling like normal software.
 
 ## Planned Features
 
@@ -17,6 +17,7 @@ This shape is intentional. Job search automation often needs local browser sessi
 ## Tech Stack
 
 - Python 3.11+
+- PySide6 / Qt for the desktop application
 - Typer for the CLI
 - Playwright for browser automation
 - HTTPX and BeautifulSoup for lightweight scraping
@@ -35,6 +36,12 @@ This shape is intentional. Job search automation often needs local browser sessi
 │   ├── cli.py
 │   ├── config.py
 │   ├── database/
+│   ├── desktop/
+│   │   ├── main_window.py
+│   │   ├── pages/
+│   │   ├── styles.py
+│   │   └── widgets.py
+│   ├── desktop_app.py
 │   ├── search/
 │   ├── tracker/
 │   └── utils/
@@ -93,7 +100,13 @@ cp .env.example .env
 
 Then edit `.env` locally. Do not commit `.env`.
 
-### 5. Run the CLI
+### 5. Run the desktop app
+
+```bash
+jobseek desktop
+```
+
+### 6. Run the CLI
 
 ```bash
 python -m jobseeking_agent --help
@@ -106,6 +119,7 @@ Or use the installed console command:
 ```bash
 jobseek doctor
 jobseek db init
+jobseek desktop
 ```
 
 ## MVP Workflow
@@ -135,6 +149,34 @@ jobseek db init
 jobseek jobs add "Backend Engineer" "Example Company" --location Remote --url https://example.com/job
 jobseek jobs list
 jobseek ai cover-letter 1
+jobseek desktop
+```
+
+## Desktop App
+
+Run the local desktop app:
+
+```bash
+jobseek desktop
+```
+
+The first desktop version includes visible entry points for the full product flow:
+
+- Dashboard
+- Jobs
+- AI
+- Application
+- Tracker
+- Settings / Candidate Profile
+
+The Settings page stores local profile data in `data/profile.json`. Resume uploads are copied
+to `data/resumes/`, and cover letter templates are copied to `data/cover_letters/`. These local
+files are ignored by Git.
+
+An optional Streamlit dashboard is still available for quick experiments:
+
+```bash
+jobseek web
 ```
 
 ## Development
@@ -184,7 +226,7 @@ The CI file is at `.github/workflows/ci.yml`.
 - Add matching and ranking pipeline.
 - Add browser automation flows under `src/jobseeking_agent/apply/`.
 - Add a manual approval queue.
-- Add optional Streamlit or FastAPI dashboard.
+- Package desktop releases for macOS and Windows.
 
 ## License
 

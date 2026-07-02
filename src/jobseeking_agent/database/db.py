@@ -161,3 +161,26 @@ def get_job(job_id: int, database_url: str | None = None) -> Job | None:
         match_score=row["match_score"],
         created_at=row["created_at"],
     )
+
+
+def update_job_status(job_id: int, status: str, database_url: str | None = None) -> bool:
+    with connect(database_url) as connection:
+        cursor = connection.execute(
+            "UPDATE jobs SET status = ? WHERE id = ?",
+            (status, job_id),
+        )
+    return cursor.rowcount > 0
+
+
+def job_status_counts(database_url: str | None = None) -> dict[str, int]:
+    with connect(database_url) as connection:
+        rows = connection.execute(
+            """
+            SELECT status, COUNT(*) AS count
+            FROM jobs
+            GROUP BY status
+            ORDER BY status
+            """
+        ).fetchall()
+
+    return {row["status"]: int(row["count"]) for row in rows}

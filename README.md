@@ -216,8 +216,20 @@ GitHub Actions runs on pushes and pull requests. The workflow checks:
 - Dependency installation from `requirements.txt`.
 - Ruff linting.
 - Pytest test suite.
+- Dependency consistency with `pip check`.
+- CLI startup and SQLite initialization.
+- Desktop and optional web dashboard import smoke tests.
+- Branch policy: pull requests into `main` must come from `develop`.
 
 The CI file is at `.github/workflows/ci.yml`.
+
+## Branch Policy
+
+- Feature branches merge into `develop`.
+- Only `develop` may merge into `main`.
+- Do not push directly to `main`.
+
+See `CONTRIBUTING.md` for the GitHub branch protection settings that must be enabled manually.
 
 ## Roadmap
 

@@ -128,4 +128,19 @@ QLabel#metricValue {
 QLabel#metricLabel {
     color: #64748b;
 }
+QLabel#helperText {
+    color: #64748b;
+    padding: 4px 0;
+}
+QProgressBar {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    height: 10px;
+    background: #f8fafc;
+    text-align: center;
+}
+QProgressBar::chunk {
+    border-radius: 5px;
+    background: #0f766e;
+}
 """

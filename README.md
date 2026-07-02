@@ -164,7 +164,7 @@ The first desktop version includes visible entry points for the full product flo
 
 - Dashboard
 - Jobs
-- AI
+- Generate Cover Letter
 - Application
 - Tracker
 - Settings / Candidate Profile
@@ -172,6 +172,25 @@ The first desktop version includes visible entry points for the full product flo
 The Settings page stores local profile data in `data/profile.json`. Resume uploads are copied
 to `data/resumes/`, and cover letter templates are copied to `data/cover_letters/`. These local
 files are ignored by Git.
+
+## Gemini Cover Letters
+
+Set a Gemini API key in `.env`:
+
+```bash
+GEMINI_API_KEY=your-api-key
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+Then use the desktop `Generate Cover Letter` page to generate a cover letter for a saved job. The generator combines:
+
+- Candidate profile from `Settings`
+- Uploaded resume text
+- Optional uploaded cover letter template
+- Selected job title, company, location, URL, and description
+
+Text extraction currently supports `.txt` and `.md` files. PDF and Word uploads are stored locally,
+but full text extraction for those formats is a planned enhancement.
 
 An optional Streamlit dashboard is still available for quick experiments:
 

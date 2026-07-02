@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QApplication,
@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from jobseeking_agent.ai.cover_letter_generator import generate_cover_letter
+from jobseeking_agent.ai.cover_letter_generator import generate_cover_letter_result
 from jobseeking_agent.application.autofill import build_application_plan
 from jobseeking_agent.database.db import (
     get_job,
@@ -52,6 +52,19 @@ from jobseeking_agent.profile import (
 from jobseeking_agent.utils.file_manager import ensure_local_directories
 
 
+class CoverLetterWorker(QObject):
+    finished = Signal(str, object)
+
+    def __init__(self, job: Job) -> None:
+        super().__init__()
+        self.job = job
+
+    @Slot()
+    def run(self) -> None:
+        path, result = generate_cover_letter_result(self.job)
+        self.finished.emit(str(path), result)
+
+
 class JobSeekingAgentWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
@@ -65,9 +78,11 @@ class JobSeekingAgentWindow(QMainWindow):
 
         self.sidebar = QListWidget()
         self.sidebar.setObjectName("sidebar")
-        self.sidebar.setMinimumWidth(172)
-        self.sidebar.setMaximumWidth(260)
+        self.sidebar.setMinimumWidth(210)
+        self.sidebar.setMaximumWidth(320)
         self.pages = QStackedWidget()
+        self.cover_letter_thread: QThread | None = None
+        self.cover_letter_worker: CoverLetterWorker | None = None
 
         self.build_pages()
         self.build_menu()
@@ -95,7 +110,7 @@ class JobSeekingAgentWindow(QMainWindow):
         splitter.addWidget(self.pages)
         splitter.setCollapsible(0, False)
         splitter.setCollapsible(1, False)
-        splitter.setSizes([220, 1100])
+        splitter.setSizes([260, 1060])
 
         self.setCentralWidget(splitter)
         self.sidebar.currentRowChanged.connect(self.pages.setCurrentIndex)
@@ -105,7 +120,7 @@ class JobSeekingAgentWindow(QMainWindow):
         page_builders = [
             ("Dashboard", build_dashboard_page),
             ("Jobs", build_jobs_page),
-            ("AI", build_ai_page),
+            ("Generate Cover Letter", build_ai_page),
             ("Application", build_application_page),
             ("Tracker", build_tracker_page),
             ("Settings", build_settings_page),
@@ -252,6 +267,9 @@ class JobSeekingAgentWindow(QMainWindow):
         return int(value) if value is not None else None
 
     def generate_cover_letter_for_selected_job(self) -> None:
+        if self.cover_letter_thread is not None:
+            return
+
         job_id = self.selected_job_id(self.ai_job_select)
         if job_id is None:
             QMessageBox.information(self, "No Job", "Add a job first.")
@@ -259,8 +277,42 @@ class JobSeekingAgentWindow(QMainWindow):
         job = get_job(job_id)
         if job is None:
             return
-        path = generate_cover_letter(job)
+
+        self.ai_status_label.setText("Generating cover letter with Gemini...")
+        self.ai_progress.show()
+        self.generate_cover_button.setEnabled(False)
+        self.ai_job_select.setEnabled(False)
+
+        self.cover_letter_thread = QThread()
+        self.cover_letter_worker = CoverLetterWorker(job)
+        self.cover_letter_worker.moveToThread(self.cover_letter_thread)
+        self.cover_letter_thread.started.connect(self.cover_letter_worker.run)
+        self.cover_letter_worker.finished.connect(self.handle_cover_letter_finished)
+        self.cover_letter_worker.finished.connect(self.cover_letter_thread.quit)
+        self.cover_letter_worker.finished.connect(self.cover_letter_worker.deleteLater)
+        self.cover_letter_thread.finished.connect(self.cover_letter_thread.deleteLater)
+        self.cover_letter_thread.finished.connect(self.clear_cover_letter_worker)
+        self.cover_letter_thread.start()
+
+    @Slot(str, object)
+    def handle_cover_letter_finished(self, path: str, result: object) -> None:
         self.cover_letter_output.setPlainText(Path(path).read_text(encoding="utf-8"))
+        status = (
+            f"Saved to {path} · provider={result.provider} · model={result.model} · "
+            f"resume={'yes' if result.used_resume else 'no'} · "
+            f"template={'yes' if result.used_template else 'no'}"
+        )
+        if result.error:
+            status = f"{status} · note={result.error}"
+        self.ai_status_label.setText(status)
+        self.ai_progress.hide()
+        self.generate_cover_button.setEnabled(True)
+        self.ai_job_select.setEnabled(True)
+
+    @Slot()
+    def clear_cover_letter_worker(self) -> None:
+        self.cover_letter_thread = None
+        self.cover_letter_worker = None
 
     def clear_layout(self, layout: QVBoxLayout) -> None:
         while layout.count():

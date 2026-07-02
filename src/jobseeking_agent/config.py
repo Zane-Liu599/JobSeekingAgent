@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     min_salary: str = ""
     work_authorization: str = ""
 
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"
+
 
 def get_settings() -> Settings:
     return Settings()

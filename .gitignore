@@ -20,8 +20,19 @@ ENV/
 *.pfx
 
 # Local app data
-data/
-logs/
+data/*
+!data/.gitkeep
+!data/resumes/
+data/resumes/*
+!data/resumes/.gitkeep
+!data/cover_letters/
+data/cover_letters/*
+!data/cover_letters/.gitkeep
+!data/exports/
+data/exports/*
+!data/exports/.gitkeep
+logs/*
+!logs/.gitkeep
 exports/
 downloads/
 screenshots/
@@ -29,8 +40,10 @@ browser_profiles/
 playwright/.cache/
 
 # Resumes and private documents
-resumes/
-cover_letters/
+resumes/*
+!resumes/.gitkeep
+cover_letters/*
+!cover_letters/.gitkeep
 *.doc
 *.docx
 *.pdf

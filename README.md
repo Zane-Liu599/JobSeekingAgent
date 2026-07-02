@@ -30,8 +30,18 @@ This shape is intentional. Job search automation often needs local browser sessi
 ├── .github/workflows/ci.yml
 ├── src/jobseeking_agent/
 │   ├── __init__.py
+│   ├── ai/
+│   ├── application/
 │   ├── cli.py
-│   └── config.py
+│   ├── config.py
+│   ├── database/
+│   ├── search/
+│   ├── tracker/
+│   └── utils/
+├── data/
+│   ├── cover_letters/
+│   ├── exports/
+│   └── resumes/
 ├── tests/
 │   └── test_config.py
 ├── .env.example
@@ -88,12 +98,43 @@ Then edit `.env` locally. Do not commit `.env`.
 ```bash
 python -m jobseeking_agent --help
 python -m jobseeking_agent doctor
+python -m jobseeking_agent db init
 ```
 
 Or use the installed console command:
 
 ```bash
 jobseek doctor
+jobseek db init
+```
+
+## MVP Workflow
+
+The first version is designed around this local workflow:
+
+```text
+Enter keywords and location
+        ↓
+Search or import jobs
+        ↓
+Parse job details
+        ↓
+Score fit and generate application material
+        ↓
+Review manually
+        ↓
+Autofill/upload in browser
+        ↓
+Track application status in SQLite
+```
+
+Current starter commands:
+
+```bash
+jobseek db init
+jobseek jobs add "Backend Engineer" "Example Company" --location Remote --url https://example.com/job
+jobseek jobs list
+jobseek ai cover-letter 1
 ```
 
 ## Development

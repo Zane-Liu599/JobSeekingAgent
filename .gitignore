@@ -62,6 +62,7 @@ coverage.xml
 # Build artifacts
 build/
 dist/
+*.tsbuildinfo
 *.egg-info/
 
 # IDEs and editors

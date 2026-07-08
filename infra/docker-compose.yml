@@ -1,0 +1,228 @@
+name: jobseeking-agent
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: infra/docker/web.Dockerfile
+    image: jobseeking-agent-web:local
+    depends_on:
+      - identity-service
+      - communication-service
+      - ai-service
+    ports:
+      - "${WEB_HOST_PORT:-8080}:${WEB_CONTAINER_PORT:-80}"
+    restart: unless-stopped
+
+  identity-service:
+    build:
+      context: ..
+      dockerfile: infra/docker/python-service.Dockerfile
+      args:
+        SERVICE_NAME: identity-service
+    image: jobseeking-agent-identity-service:local
+    command: uvicorn identity_service.main:app --host 0.0.0.0 --port 8000
+    environment:
+      APP_ENV: production
+      SERVICE_NAME: identity-service
+      MYSQL_DSN: mysql+pymysql://${MYSQL_USER:-jobseeking}:${MYSQL_PASSWORD:-jobseeking}@mysql:3306/${MYSQL_IDENTITY_DATABASE:-identity}
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  communication-service:
+    build:
+      context: ..
+      dockerfile: infra/docker/python-service.Dockerfile
+      args:
+        SERVICE_NAME: communication-service
+    image: jobseeking-agent-communication-service:local
+    command: uvicorn communication_service.main:app --host 0.0.0.0 --port 8000
+    environment:
+      APP_ENV: production
+      SERVICE_NAME: communication-service
+      MYSQL_DSN: mysql+pymysql://${MYSQL_USER:-jobseeking}:${MYSQL_PASSWORD:-jobseeking}@mysql:3306/${MYSQL_COMMUNICATION_DATABASE:-communication}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ai-service:
+    build:
+      context: ..
+      dockerfile: infra/docker/ai-service.Dockerfile
+    image: jobseeking-agent-ai-service:local
+    command: uvicorn ai_service.main:app --host 0.0.0.0 --port 8000
+    environment:
+      APP_ENV: production
+      SERVICE_NAME: ai-service
+      POSTGRES_DSN: postgresql+psycopg://${POSTGRES_USER:-jobseeking}:${POSTGRES_PASSWORD:-jobseeking}@postgres:5432/${POSTGRES_AI_DATABASE:-ai}
+      DATABASE_URL: sqlite:////app/data/jobseeking_agent.db
+      REDIS_URL: redis://redis:6379/1
+      MINIO_ENDPOINT: http://minio:9000
+      CRAWLER_INTERNAL_URL: ${CRAWLER_INTERNAL_URL:-http://crawler-service:8000}
+      CRAWLER_ADMIN_TOKEN: ${CRAWLER_ADMIN_TOKEN:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      BROWSER_HEADLESS: "true"
+      BROWSER_SLOW_MO_MS: ${BROWSER_SLOW_MO_MS:-0}
+      USER_AGENT: ${USER_AGENT:-JobSeekingAgent/0.1}
+      REQUEST_TIMEOUT_SECONDS: ${REQUEST_TIMEOUT_SECONDS:-30}
+      CRAWL_DELAY_SECONDS: ${CRAWL_DELAY_SECONDS:-3}
+      MAX_JOBS_PER_SOURCE: ${MAX_JOBS_PER_SOURCE:-50}
+      MAX_SEARCH_RESULTS: ${MAX_SEARCH_RESULTS:-20}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      crawler-service:
+        condition: service_started
+    volumes:
+      - ../data:/app/data
+      - ../logs:/app/logs
+    restart: unless-stopped
+
+  crawler-service:
+    build:
+      context: ..
+      dockerfile: infra/docker/crawler-service.Dockerfile
+    image: jobseeking-agent-crawler-service:local
+    command: uvicorn crawler_service.main:app --host 0.0.0.0 --port 8000
+    environment:
+      APP_ENV: production
+      SERVICE_NAME: crawler-service
+      DATABASE_URL: sqlite:////app/data/jobseeking_agent.db
+      CRAWLER_DEFAULT_KEYWORDS: ${CRAWLER_DEFAULT_KEYWORDS:-software engineer,backend engineer,full stack developer}
+      CRAWLER_DEFAULT_LOCATIONS: ${CRAWLER_DEFAULT_LOCATIONS:-Sydney,Melbourne,Remote}
+      CRAWLER_DEFAULT_PLATFORMS: ${CRAWLER_DEFAULT_PLATFORMS:-seek,linkedin,indeed}
+      CRAWLER_ADMIN_TOKEN: ${CRAWLER_ADMIN_TOKEN:-}
+      CRAWLER_OFFICIAL_APPLY_ONLY: ${CRAWLER_OFFICIAL_APPLY_ONLY:-true}
+      CRAWLER_ALLOW_SEARCH_DISCOVERY: ${CRAWLER_ALLOW_SEARCH_DISCOVERY:-false}
+      BROWSER_HEADLESS: ${BROWSER_HEADLESS:-true}
+      BROWSER_SLOW_MO_MS: ${BROWSER_SLOW_MO_MS:-0}
+      BROWSER_STORAGE_DIR: ${BROWSER_STORAGE_DIR:-./data/browser-states}
+      USER_AGENT: ${USER_AGENT:-JobSeekingAgent/0.1}
+      REQUEST_TIMEOUT_SECONDS: ${REQUEST_TIMEOUT_SECONDS:-30}
+      CRAWL_DELAY_SECONDS: ${CRAWL_DELAY_SECONDS:-3}
+      MAX_JOBS_PER_SOURCE: ${MAX_JOBS_PER_SOURCE:-50}
+      MAX_SEARCH_RESULTS: ${MAX_SEARCH_RESULTS:-20}
+    ports:
+      - "${CRAWLER_HOST_PORT:-8090}:${CRAWLER_CONTAINER_PORT:-8000}"
+    volumes:
+      - ../data:/app/data
+      - ../logs:/app/logs
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-jobseeking-root}
+      MYSQL_USER: ${MYSQL_USER:-jobseeking}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jobseeking}
+      MYSQL_DATABASE: ${MYSQL_IDENTITY_DATABASE:-identity}
+    ports:
+      - "${MYSQL_HOST_PORT:-3306}:${MYSQL_CONTAINER_PORT:-3306}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$${MYSQL_USER} -p$${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-jobseeking}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jobseeking}
+      POSTGRES_DB: ${POSTGRES_AI_DATABASE:-ai}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:${POSTGRES_CONTAINER_PORT:-5432}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "${REDIS_HOST_PORT:-6379}:${REDIS_CONTAINER_PORT:-6379}"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:RELEASE.2024-10-13T13-34-11Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    ports:
+      - "${MINIO_API_HOST_PORT:-9000}:${MINIO_API_CONTAINER_PORT:-9000}"
+      - "${MINIO_CONSOLE_HOST_PORT:-9001}:${MINIO_CONSOLE_CONTAINER_PORT:-9001}"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  celery-worker:
+    build:
+      context: ..
+      dockerfile: infra/docker/ai-service.Dockerfile
+    image: jobseeking-agent-ai-service:local
+    command: celery -A ai_service.worker worker --loglevel=INFO
+    environment:
+      APP_ENV: production
+      SERVICE_NAME: ai-service
+      REDIS_URL: redis://redis:6379/1
+      POSTGRES_DSN: postgresql+psycopg://${POSTGRES_USER:-jobseeking}:${POSTGRES_PASSWORD:-jobseeking}@postgres:5432/${POSTGRES_AI_DATABASE:-ai}
+      DATABASE_URL: sqlite:////app/data/jobseeking_agent.db
+      BROWSER_HEADLESS: "true"
+      BROWSER_SLOW_MO_MS: ${BROWSER_SLOW_MO_MS:-0}
+      USER_AGENT: ${USER_AGENT:-JobSeekingAgent/0.1}
+      REQUEST_TIMEOUT_SECONDS: ${REQUEST_TIMEOUT_SECONDS:-30}
+      CRAWL_DELAY_SECONDS: ${CRAWL_DELAY_SECONDS:-3}
+      MAX_JOBS_PER_SOURCE: ${MAX_JOBS_PER_SOURCE:-50}
+      MAX_SEARCH_RESULTS: ${MAX_SEARCH_RESULTS:-20}
+    depends_on:
+      redis:
+        condition: service_healthy
+    profiles:
+      - workers
+    volumes:
+      - ../data:/app/data
+      - ../logs:/app/logs
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  postgres_data:
+  redis_data:
+  minio_data:

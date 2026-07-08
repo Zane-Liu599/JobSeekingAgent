@@ -106,6 +106,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -e .
+          python -m playwright install chromium
 
       - name: Run CLI smoke test
         env:
@@ -116,7 +117,7 @@ jobs:
           jobseek db init
 
   app-import-smoke:
-    name: App Import Smoke
+    name: Service Import Smoke
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -128,23 +129,6 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Install Linux Qt runtime libraries
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libegl1 \
-            libgl1 \
-            libxkbcommon-x11-0 \
-            libxcb-cursor0 \
-            libxcb-icccm4 \
-            libxcb-image0 \
-            libxcb-keysyms1 \
-            libxcb-randr0 \
-            libxcb-render-util0 \
-            libxcb-shape0 \
-            libxcb-xinerama0 \
-            libxcb-xfixes0
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -153,8 +137,49 @@ jobs:
 
       - name: Run app import smoke test
         run: |
-          python -c "from jobseeking_agent.desktop.main_window import JobSeekingAgentWindow; print(JobSeekingAgentWindow.__name__)"
-          python -c "import jobseeking_agent.web_app; print('web import ok')"
+          python -c "from identity_service.main import app; print(app.title)"
+          python -c "from communication_service.main import app; print(app.title)"
+          python -c "from ai_service.main import app; print(app.title)"
+          python -c "import jobseeking_agent.web_app; print('legacy web import ok')"
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: apps/web
+        run: npm run build
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose config
+        run: |
+          cp .env.example .env
+          docker compose --env-file .env -f infra/docker-compose.yml config
+
+      - name: Build identity service image
+        run: |
+          docker build \
+            --build-arg SERVICE_NAME=identity-service \
+            -f infra/docker/python-service.Dockerfile \
+            -t jobseeking-agent-identity-service:ci .
 
   quality:
     name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
@@ -174,24 +199,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-
-      - name: Install Linux Qt runtime libraries
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libegl1 \
-            libgl1 \
-            libxkbcommon-x11-0 \
-            libxcb-cursor0 \
-            libxcb-icccm4 \
-            libxcb-image0 \
-            libxcb-keysyms1 \
-            libxcb-randr0 \
-            libxcb-render-util0 \
-            libxcb-shape0 \
-            libxcb-xinerama0 \
-            libxcb-xfixes0
 
       - name: Install dependencies
         run: |
@@ -218,5 +225,7 @@ jobs:
 
       - name: App import smoke test
         run: |
-          python -c "from jobseeking_agent.desktop.main_window import JobSeekingAgentWindow; print(JobSeekingAgentWindow.__name__)"
-          python -c "import jobseeking_agent.web_app; print('web import ok')"
+          python -c "from identity_service.main import app; print(app.title)"
+          python -c "from communication_service.main import app; print(app.title)"
+          python -c "from ai_service.main import app; print(app.title)"
+          python -c "import jobseeking_agent.web_app; print('legacy web import ok')"

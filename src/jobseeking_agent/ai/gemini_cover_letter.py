@@ -93,6 +93,8 @@ Job:
 Title: {job.title}
 Company: {job.company}
 Location: {job.location}
+Employment type: {job.employment_type}
+Salary: {job.salary}
 Platform: {job.platform}
 URL: {job.job_url}
 Description:

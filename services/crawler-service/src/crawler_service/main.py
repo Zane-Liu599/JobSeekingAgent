@@ -152,6 +152,12 @@ def crawler_config(_: None = Depends(require_admin)):
         "default_platforms": split_csv(settings.default_platforms),
         "provider": settings.provider,
         "official_apply_only": settings.official_apply_only,
+        "allow_search_discovery": settings.allow_search_discovery,
+        "jobspy_results_wanted": settings.jobspy_results_wanted,
+        "jobspy_hours_old": settings.jobspy_hours_old,
+        "jobspy_country_indeed": settings.jobspy_country_indeed,
+        "jobspy_linkedin_fetch_description": settings.jobspy_linkedin_fetch_description,
+        "jobspy_proxies_configured": bool(split_csv(settings.jobspy_proxies)),
     }
 
 

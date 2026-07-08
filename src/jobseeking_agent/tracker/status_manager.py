@@ -1,5 +1,8 @@
 VALID_STATUSES = {
     "found",
+    "saved",
+    "ignored",
+    "ai_applying",
     "draft",
     "reviewing",
     "submitted",

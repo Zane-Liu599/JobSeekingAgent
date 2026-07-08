@@ -13,13 +13,17 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     database_url: str = "sqlite:///data/jobseeking_agent.db"
 
-    browser_headless: bool = False
+    browser_headless: bool = True
     browser_slow_mo_ms: int = Field(default=100, ge=0)
+    browser_storage_dir: str = "./data/browser-states"
     user_agent: str = "JobSeekingAgent/0.1"
 
     request_timeout_seconds: int = Field(default=30, gt=0)
     crawl_delay_seconds: int = Field(default=3, ge=0)
     max_jobs_per_source: int = Field(default=50, gt=0)
+    max_search_results: int = Field(default=20, gt=0)
+    crawler_official_apply_only: bool = True
+    crawler_allow_search_discovery: bool = False
 
     candidate_name: str = ""
     candidate_email: str = ""

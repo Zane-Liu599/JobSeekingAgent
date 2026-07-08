@@ -1,264 +1,256 @@
 # JobSeekingAgent
 
-JobSeekingAgent is a cross-platform job seeking automation project for macOS, Windows, and Linux. It is designed as a local desktop agent: a Qt desktop app provides the main experience, while a command-line tool handles scraping, matching, resume customization, application automation, and tracking.
+JobSeekingAgent is being rebuilt as a Docker-first web platform for job seeking automation, AI-assisted application workflows, community communication, and user/account management.
 
-This shape is intentional. Job search automation often needs local browser sessions, user-controlled credentials, resumes stored on disk, and careful review before submitting applications. A local desktop app keeps sensitive data on the user's machine while still feeling like normal software.
+The current architecture uses React for the frontend, FastAPI microservices for the backend, separate databases for identity/communication and AI vector data, Redis/Celery for background work, MinIO for files, and Nginx as the public gateway.
 
-## Planned Features
+## Stack
 
-- Scrape job listings from supported job boards and company career pages.
-- Normalize job data into one local schema.
-- Match roles against skills, location, visa status, salary, and preferences.
-- Generate application tasks with human approval before submission.
-- Automate browser-based resume submission with Playwright.
-- Track application status, notes, timestamps, and follow-up reminders.
-- Export reports to CSV, JSON, or a future dashboard.
-
-## Tech Stack
-
-- Python 3.11+
-- PySide6 / Qt for the desktop application
-- Typer for the CLI
-- Playwright for browser automation
-- HTTPX and BeautifulSoup for lightweight scraping
-- Pydantic and python-dotenv for configuration
-- Pytest and Ruff for CI quality checks
+- Frontend: React 19, TypeScript, Vite, Bootstrap, React Icons, React Markdown, KaTeX
+- Routing: React Router
+- Backend: Python FastAPI microservices
+- Services:
+  - `identity-service`: authentication, users, identity, Stripe customer linkage
+  - `communication-service`: forum, notifications, activity feeds
+  - `ai-service`: AI chat, indexing, vector retrieval
+  - `crawler-service`: private job crawling and job database update backend
+- Databases:
+  - MySQL 8 for identity and communication data
+  - PostgreSQL 17 + pgvector for AI vector data
+- Cache and queue: Redis + Celery
+- Object storage: MinIO
+- AI: Google Gemini API, LangGraph, LangChain, pgvector
+- Payments: Stripe
+- Gateway: Nginx
+- Shared Python package: `platform_common`
 
 ## Project Layout
 
 ```text
 .
-├── .github/workflows/ci.yml
-├── src/jobseeking_agent/
-│   ├── __init__.py
-│   ├── ai/
-│   ├── application/
-│   ├── cli.py
-│   ├── config.py
-│   ├── database/
-│   ├── desktop/
-│   │   ├── main_window.py
-│   │   ├── pages/
-│   │   ├── styles.py
-│   │   └── widgets.py
-│   ├── desktop_app.py
-│   ├── search/
-│   ├── tracker/
-│   └── utils/
-├── data/
-│   ├── cover_letters/
-│   ├── exports/
-│   └── resumes/
+├── apps/
+│   └── web/                         # React 19 + TypeScript + Vite frontend
+├── services/
+│   ├── identity-service/            # FastAPI identity/auth service
+│   ├── communication-service/       # FastAPI forum/notification service
+│   ├── ai-service/                  # FastAPI AI/chat/indexing service
+│   └── crawler-service/             # Private job crawling backend
+├── packages/
+│   └── platform_common/             # Shared Python settings, health, utilities
+├── infra/
+│   ├── docker-compose.yml
+│   ├── docker/
+│   │   ├── python-service.Dockerfile
+│   │   └── web.Dockerfile
+│   ├── nginx/
+│   ├── mysql/
+│   └── postgres/
+├── src/jobseeking_agent/            # Legacy job automation modules during migration
 ├── tests/
-│   └── test_config.py
-├── .env.example
-├── .gitignore
+├── requirements.txt
 ├── pyproject.toml
-├── README.md
-└── requirements.txt
+└── .env.example
 ```
 
 ## Quick Start
 
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/<your-username>/JobSeekingAgent.git
-cd JobSeekingAgent
-```
-
-### 2. Create a virtual environment
-
-macOS or Linux:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-Windows PowerShell:
-
-```powershell
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-### 3. Install dependencies
-
-```bash
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-pip install -e .
-playwright install chromium
-```
-
-### 4. Configure environment variables
+Create a local environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Then edit `.env` locally. Do not commit `.env`.
-
-### 5. Run the desktop app
+Start the full platform:
 
 ```bash
-jobseek desktop
+docker compose --env-file .env -f infra/docker-compose.yml up -d --build
 ```
 
-### 6. Run the CLI
-
-```bash
-python -m jobseeking_agent --help
-python -m jobseeking_agent doctor
-python -m jobseeking_agent db init
-```
-
-Or use the installed console command:
-
-```bash
-jobseek doctor
-jobseek db init
-jobseek desktop
-```
-
-## MVP Workflow
-
-The first version is designed around this local workflow:
+Open:
 
 ```text
-Enter keywords and location
-        ↓
-Search or import jobs
-        ↓
-Parse job details
-        ↓
-Score fit and generate application material
-        ↓
-Review manually
-        ↓
-Autofill/upload in browser
-        ↓
-Track application status in SQLite
+http://localhost:8080
 ```
 
-Current starter commands:
+Useful service endpoints:
+
+```text
+http://localhost:8080/api/identity/health
+http://localhost:8080/api/communication/health
+http://localhost:8080/api/ai/health
+http://localhost:8090/health
+http://localhost:9001
+```
+
+If a host port is already in use, change the matching `*_HOST_PORT` value in `.env`.
+For example, if local MySQL already uses `3306`:
+
+```env
+MYSQL_HOST_PORT=3307
+```
+
+Common host port settings:
+
+```env
+WEB_HOST_PORT=8080
+MYSQL_HOST_PORT=3306
+POSTGRES_HOST_PORT=5432
+REDIS_HOST_PORT=6379
+MINIO_API_HOST_PORT=9000
+MINIO_CONSOLE_HOST_PORT=9001
+CRAWLER_HOST_PORT=8090
+```
+
+## Private Crawler Backend
+
+The user-facing website reads saved jobs. The crawler backend is separate and is used by the project owner to crawl and refresh job listings in the shared job database.
+
+Default crawler URL:
+
+```text
+http://localhost:8090
+```
+
+Open the private crawler dashboard:
+
+```text
+http://localhost:8090
+```
+
+Run one crawl:
 
 ```bash
-jobseek db init
-jobseek jobs add "Backend Engineer" "Example Company" --location Remote --url https://example.com/job
-jobseek jobs list
-jobseek ai cover-letter 1
-jobseek desktop
+curl -X POST http://localhost:8090/crawl/once \
+  -H "Content-Type: application/json" \
+  -d '{"keywords":"backend engineer","location":"Sydney","platform":"seek"}'
 ```
 
-## Desktop App
-
-Run the local desktop app:
+Run an official company careers crawl:
 
 ```bash
-jobseek desktop
+curl -X POST http://localhost:8090/crawl/company \
+  -H "Content-Type: application/json" \
+  -d '{"company_name":"Amazon Web Services","keywords":"software engineer","location":"Sydney"}'
 ```
 
-The first desktop version includes visible entry points for the full product flow:
-
-- Dashboard
-- Jobs
-- Generate Cover Letter
-- Application
-- Tracker
-- Settings / Candidate Profile
-
-The Settings page stores local profile data in `data/profile.json`. Resume uploads are copied
-to `data/resumes/`, and cover letter templates are copied to `data/cover_letters/`. These local
-files are ignored by Git.
-
-## Gemini Cover Letters
-
-Set a Gemini API key in `.env`:
+List discovered company sources:
 
 ```bash
-GEMINI_API_KEY=your-api-key
-GEMINI_MODEL=gemini-2.5-flash
+curl http://localhost:8090/companies
 ```
 
-Then use the desktop `Generate Cover Letter` page to generate a cover letter for a saved job. The generator combines:
-
-- Candidate profile from `Settings`
-- Uploaded resume text
-- Optional uploaded cover letter template
-- Selected job title, company, location, URL, and description
-
-Text extraction currently supports `.txt` and `.md` files. PDF and Word uploads are stored locally,
-but full text extraction for those formats is a planned enhancement.
-
-An optional Streamlit dashboard is still available for quick experiments:
+Run the configured keyword/location/platform batch:
 
 ```bash
-jobseek web
+curl -X POST http://localhost:8090/crawl/run \
+  -H "Content-Type: application/json" \
+  -d '{}'
 ```
 
-## Development
+Configure defaults in `.env`:
 
-Run tests:
+```env
+CRAWLER_DEFAULT_KEYWORDS=software engineer,backend engineer,full stack developer
+CRAWLER_DEFAULT_LOCATIONS=Sydney,Melbourne,Remote
+CRAWLER_DEFAULT_PLATFORMS=seek,linkedin,indeed
+CRAWLER_ADMIN_TOKEN=
+CRAWLER_PROVIDER=auto
+CRAWLER_OFFICIAL_APPLY_ONLY=true
+CRAWLER_ALLOW_SEARCH_DISCOVERY=true
+JOBSPY_RESULTS_WANTED=25
+JOBSPY_HOURS_OLD=168
+JOBSPY_COUNTRY_INDEED=Australia
+JOBSPY_LINKEDIN_FETCH_DESCRIPTION=true
+JOBSPY_PROXIES=
+BROWSER_STORAGE_DIR=./data/browser-states
+```
+
+If `CRAWLER_ADMIN_TOKEN` is set, include it in crawler requests:
 
 ```bash
-pytest
+curl -H "X-Crawler-Token: your-token" http://localhost:8090/config
 ```
 
-Run lint checks:
+The crawler flow is official-apply first. With `CRAWLER_PROVIDER=auto`, supported platforms use JobSpy to discover job leads and descriptions, then the ATS resolver tries to enrich each lead with a company careers or ATS URL such as Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Amazon Jobs, or another official careers page. Unsupported platforms fall back to the existing Playwright crawler. Set `CRAWLER_PROVIDER=jobspy` to force JobSpy for supported platforms, or `CRAWLER_PROVIDER=playwright` to force the browser crawler. Jobs without an external apply URL are skipped when `CRAWLER_OFFICIAL_APPLY_ONLY=true`.
+
+Create a logged-in browser session locally before running the Docker crawler:
 
 ```bash
-ruff check .
+python3 -m jobseeking_agent crawler login seek
+python3 -m jobseeking_agent crawler login linkedin
+python3 -m jobseeking_agent crawler login indeed
 ```
 
-Format code:
+The login helper uses your installed Google Chrome by default because some job boards reject generic automation Chromium as an insecure browser. You can choose another browser channel:
 
 ```bash
-ruff format .
+python3 -m jobseeking_agent crawler login linkedin --browser chrome
+python3 -m jobseeking_agent crawler login linkedin --browser msedge
+python3 -m jobseeking_agent crawler login linkedin --browser chromium
 ```
 
-## Automation Safety Rules
+These commands save Playwright storage state files under `data/browser-states/`. The Docker crawler mounts `data/` and reads those files; it does not store account passwords.
 
-- Keep real credentials in `.env` or a password manager, never in code.
-- Review each generated application before submitting.
-- Respect each website's robots.txt, terms of service, and rate limits.
-- Prefer official APIs when available.
-- Add per-site throttling and clear user-agent strings before running large crawls.
-- Store resumes and cover letters locally or in encrypted storage.
+The preferred official-link path is company-first: use job boards to discover titles and companies, then scan company career pages and ATS sources directly. The crawler stores company sources in `companies` and currently supports Greenhouse, Lever, Amazon Jobs search pages, and conservative generic career-page link extraction.
 
-## CI
+The user-facing job search reads from the shared job database. On the first search of each keyword/location/platform combination per UTC day, `ai-service` asks the private `crawler-service` to refresh that query, then returns the updated saved database results. Repeating the same search later that day uses the database only, which keeps crawler traffic controlled.
 
-GitHub Actions runs on pushes and pull requests. The workflow checks:
+Stop everything:
 
-- Python installation on Linux, macOS, and Windows.
-- Dependency installation from `requirements.txt`.
-- Ruff linting.
-- Pytest test suite.
-- Dependency consistency with `pip check`.
-- CLI startup and SQLite initialization.
-- Desktop and optional web dashboard import smoke tests.
-- Branch policy: pull requests into `main` must come from `develop`.
+```bash
+docker compose --env-file .env -f infra/docker-compose.yml down --remove-orphans
+```
 
-The CI file is at `.github/workflows/ci.yml`.
+Stop and remove database/object-storage volumes:
 
-## Branch Policy
+```bash
+docker compose --env-file .env -f infra/docker-compose.yml down --remove-orphans -v
+```
 
-- Feature branches merge into `develop`.
-- Only `develop` may merge into `main`.
-- Do not push directly to `main`.
+## Local Frontend Development
 
-See `CONTRIBUTING.md` for the GitHub branch protection settings that must be enabled manually.
+```bash
+cd apps/web
+npm install
+npm run dev
+```
 
-## Roadmap
+Vite runs on:
 
-- Add job source adapters under `src/jobseeking_agent/sources/`.
-- Add local storage with SQLite.
-- Add matching and ranking pipeline.
-- Add browser automation flows under `src/jobseeking_agent/apply/`.
-- Add a manual approval queue.
-- Package desktop releases for macOS and Windows.
+```text
+http://localhost:5173
+```
 
-## License
+API calls under `/api` proxy to Nginx on `http://localhost:8080`.
+If you change `WEB_HOST_PORT`, update `VITE_API_PROXY_TARGET` in `.env` for local Vite development.
 
-Add a license before publishing the repository publicly.
+## Local Python Checks
+
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e .
+python -m ruff check .
+python -m pytest
+```
+
+## Architecture Notes
+
+- New frontend work should go in `apps/web`.
+- New API work should go in the matching service under `services/`.
+- Shared Python helpers belong in `packages/platform_common`.
+- Identity and communication data should use MySQL.
+- AI embeddings, indexed documents, and vector retrieval data should use PostgreSQL with pgvector.
+- Long-running AI/indexing jobs should run through Celery workers backed by Redis.
+- Uploaded resumes, generated files, and indexed source documents should go to MinIO.
+- The old Qt desktop UI and Streamlit UI have been removed from the active architecture.
+
+## GitHub Branch Policy
+
+Recommended repository rules:
+
+- Block direct pushes to `main`
+- Require pull requests into `main`
+- Only allow `develop` to merge into `main`
+- Require CI checks before merge
+- Keep feature work on short-lived branches and merge into `develop`

@@ -1,21 +1,28 @@
-import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import {
   FaClipboardCheck,
   FaFileAlt,
   FaHome,
   FaPlusCircle,
   FaSearch,
+  FaSignOutAlt,
   FaUserEdit,
   FaWarehouse
 } from "react-icons/fa";
 
+import { clearAuth, getAuthToken } from "../api/auth";
 import { AddLeadPage } from "../pages/AddLeadPage";
 import { ApplicationTrackerPage } from "../pages/ApplicationTrackerPage";
 import { DashboardPage } from "../pages/DashboardPage";
 import { JobSearchPage } from "../pages/JobSearchPage";
+import { LoginPage } from "../pages/LoginPage";
 import { MaterialsPage } from "../pages/MaterialsPage";
 import { ProfilePage } from "../pages/ProfilePage";
+import { ProfileSetupPage } from "../pages/ProfileSetupPage";
+import { RegisterPage } from "../pages/RegisterPage";
 import { SavedJobsPage } from "../pages/SavedJobsPage";
+import { VerifyEmailPage } from "../pages/VerifyEmailPage";
+import { VerifyPendingPage } from "../pages/VerifyPendingPage";
 
 const navItems = [
   { to: "/", label: "Overview", icon: <FaHome /> },
@@ -30,6 +37,31 @@ const navItems = [
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-pending" element={<VerifyPendingPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/*" element={<ProtectedApp />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function ProtectedApp() {
+  const navigate = useNavigate();
+  const isAuthenticated = Boolean(getAuthToken());
+
+  function handleLogout() {
+    clearAuth();
+    navigate("/login", { replace: true });
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
       <div className="app-shell">
         <aside className="sidebar">
           <div className="brand">
@@ -49,19 +81,23 @@ export function AppRouter() {
               </NavLink>
             ))}
           </nav>
+          <button className="logout-button" onClick={handleLogout} type="button">
+            <FaSignOutAlt /> Log out
+          </button>
         </aside>
         <main className="content">
           <Routes>
             <Route path="/" element={<DashboardPage />} />
+            <Route path="/profile-setup" element={<ProfileSetupPage />} />
             <Route path="/search" element={<JobSearchPage />} />
             <Route path="/jobs" element={<SavedJobsPage />} />
             <Route path="/materials" element={<MaterialsPage />} />
             <Route path="/tracker" element={<ApplicationTrackerPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/add-lead" element={<AddLeadPage />} />
+            <Route path="*" element={<Navigate to="/profile-setup" replace />} />
           </Routes>
         </main>
       </div>
-    </BrowserRouter>
   );
 }

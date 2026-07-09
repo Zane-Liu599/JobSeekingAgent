@@ -60,8 +60,264 @@ body {
   width: 20px;
 }
 
+.logout-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+  margin-top: 24px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: transparent;
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+.logout-button:hover {
+  background: #1f2937;
+  color: #ffffff;
+}
+
 .content {
   padding: 34px;
+}
+
+.auth-page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 28px;
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.1), rgba(17, 24, 39, 0.06)),
+    #f4f7fb;
+}
+
+.auth-card {
+  display: grid;
+  gap: 18px;
+  width: min(100%, 460px);
+  padding: 28px;
+  border: 1px solid #d9e4ef;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.12);
+}
+
+.auth-card-wide {
+  width: min(100%, 560px);
+}
+
+.auth-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.auth-heading.compact {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.auth-heading h1,
+.profile-setup-panel h1 {
+  margin: 0;
+  color: #17202a;
+  font-size: clamp(1.65rem, 4vw, 2.2rem);
+  letter-spacing: 0;
+}
+
+.auth-heading .eyebrow,
+.profile-setup-panel .eyebrow {
+  margin: 0;
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 7px;
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.input-with-icon {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.input-with-icon svg {
+  color: #64748b;
+}
+
+.input-with-icon input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #17202a;
+}
+
+.auth-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+}
+
+.auth-resend-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  gap: 8px;
+  min-height: 42px;
+  width: fit-content;
+  padding-inline: 14px;
+}
+
+.auth-switch,
+.auth-copy {
+  margin: 0;
+  color: #526071;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.auth-copy.compact {
+  font-size: 0.9rem;
+}
+
+.auth-switch a {
+  color: #0f766e;
+  font-weight: 800;
+}
+
+.auth-alert {
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+  line-height: 1.4;
+}
+
+.auth-alert.neutral {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.field-error {
+  color: #b91c1c;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.password-meter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+  font-size: 0.84rem;
+}
+
+.password-meter-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.password-meter-bar span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: #dc2626;
+  transition: width 180ms ease, background 180ms ease;
+}
+
+.password-meter.score-1 .password-meter-bar span {
+  width: 25%;
+}
+
+.password-meter.score-2 .password-meter-bar span {
+  width: 50%;
+  background: #f59e0b;
+}
+
+.password-meter.score-3 .password-meter-bar span {
+  width: 75%;
+  background: #0ea5e9;
+}
+
+.password-meter.score-4 .password-meter-bar span {
+  width: 100%;
+  background: #0f766e;
+}
+
+.password-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.password-checks span {
+  padding: 5px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.password-checks span.passed {
+  border-color: #bbf7d0;
+  background: #ecfdf5;
+  color: #0f766e;
+}
+
+.auth-icon-large {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #0f766e;
+  font-size: 1.7rem;
+}
+
+.auth-icon-large.error {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.profile-setup-panel {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  max-width: 720px;
+  margin: 10vh auto 0;
+  padding: 42px 28px;
+  text-align: center;
 }
 
 .page-header {

@@ -27,6 +27,12 @@ services:
       SERVICE_NAME: identity-service
       MYSQL_DSN: mysql+pymysql://${MYSQL_USER:-jobseeking}:${MYSQL_PASSWORD:-jobseeking}@mysql:3306/${MYSQL_IDENTITY_DATABASE:-identity}
       JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:8080}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@jobseeking-agent.local}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
     depends_on:
       mysql:

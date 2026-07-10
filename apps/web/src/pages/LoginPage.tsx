@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaEnvelope, FaLock, FaSignInAlt } from "react-icons/fa";
+import { FaArrowLeft, FaEnvelope, FaLock, FaSignInAlt } from "react-icons/fa";
 
 import { loginAccount } from "../api/auth";
 
@@ -16,7 +16,7 @@ export function LoginPage() {
     setIsBusy(true);
     try {
       await loginAccount(form.email, form.password);
-      navigate("/profile-setup", { replace: true });
+      navigate("/app/profile-setup", { replace: true });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Login failed");
     } finally {
@@ -27,6 +27,9 @@ export function LoginPage() {
   return (
     <main className="auth-page">
       <section className="auth-card">
+        <Link className="auth-home-link" to="/">
+          <FaArrowLeft /> Back to home
+        </Link>
         <div className="auth-heading">
           <span className="brand-mark">JSA</span>
           <div>

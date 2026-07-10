@@ -7,10 +7,10 @@ import { PageHeader } from "../components/PageHeader";
 const sample = String.raw`
 AI workspace supports Markdown and math rendering.
 
-Similarity search can rank documents with cosine similarity:
+Similarity search can compare documents with cosine similarity:
 
 $$
-\operatorname{score}(q, d)=\frac{q \cdot d}{\|q\|\|d\|}
+\operatorname{similarity}(q, d)=\frac{q \cdot d}{\|q\|\|d\|}
 $$
 `;
 

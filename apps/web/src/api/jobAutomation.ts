@@ -10,7 +10,6 @@ export type JobLead = {
   official_apply_url: string;
   description: string;
   status: string;
-  match_score: number | null;
   created_at: string;
 };
 

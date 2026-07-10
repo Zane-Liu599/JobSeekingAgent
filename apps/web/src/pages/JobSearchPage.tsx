@@ -1,16 +1,13 @@
-import { CSSProperties, FormEvent, PointerEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, PointerEvent, useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import {
-  FaBookmark,
   FaBriefcase,
   FaBuilding,
   FaExternalLinkAlt,
   FaFlag,
-  FaMagic,
   FaMapMarkerAlt,
   FaMoneyBillWave,
   FaSearch,
-  FaTimes
 } from "react-icons/fa";
 
 import {
@@ -48,7 +45,6 @@ export function JobSearchPage() {
     ].filter(Boolean),
     [activeJob]
   );
-  const matchScore = activeJob?.match_score ? Math.round(activeJob.match_score) : 75;
   const description = activeJob?.description || "No detailed description saved yet.";
 
   async function loadJobs() {
@@ -200,9 +196,6 @@ export function JobSearchPage() {
               <div className="review-card-main">
                 <div className="review-card-left">
                   <div className="review-title-row">
-                    <div className="fit-ring" style={{ "--score": `${matchScore}%` } as CSSProperties}>
-                      <span>{matchScore}%</span>
-                    </div>
                     <div>
                       <div className="review-card-topline">
                         <span>{activeJob.platform || "source"}</span>
@@ -240,19 +233,13 @@ export function JobSearchPage() {
 
             <div className="swipe-hints">
               <button className="swipe-action ignore" disabled={isDeciding} onClick={() => void handleDecision("ignored", "left")}>
-                <FaTimes />
-                <span>Ignore</span>
-                <small>{"Press A or <-"}</small>
+                <span>← Ignore</span>
               </button>
               <button className="swipe-action save" disabled={isDeciding} onClick={() => void handleDecision("saved", "down")}>
-                <FaBookmark />
-                <span>Save</span>
-                <small>Press S or ↓</small>
+                <span>↓ Save</span>
               </button>
               <button className="swipe-action apply" disabled={isDeciding} onClick={() => void handleDecision("ai_applying", "right")}>
-                <FaMagic />
-                <span>AI Apply</span>
-                <small>{"Press D or ->"}</small>
+                <span>→ Apply with AI</span>
               </button>
             </div>
 

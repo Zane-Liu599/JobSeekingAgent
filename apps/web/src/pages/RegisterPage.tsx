@@ -1,6 +1,6 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaEnvelope, FaLock, FaPhone, FaUserPlus, FaUser } from "react-icons/fa";
+import { FaArrowLeft, FaEnvelope, FaLock, FaPhone, FaUserPlus, FaUser } from "react-icons/fa";
 
 import { passwordChecks, passwordStrength, phoneValidationMessage, registerAccount } from "../api/auth";
 
@@ -38,6 +38,9 @@ export function RegisterPage() {
   return (
     <main className="auth-page">
       <section className="auth-card auth-card-wide">
+        <Link className="auth-home-link" to="/">
+          <FaArrowLeft /> Back to home
+        </Link>
         <div className="auth-heading">
           <span className="brand-mark">JSA</span>
           <div>

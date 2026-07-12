@@ -43,44 +43,44 @@ import { getAuthToken } from "../api/auth";
 
 const features = [
   {
-    title: "Curated job discovery",
+    title: "Structured job discovery",
     description:
-      "Search saved jobs from your database, review fresh leads, and focus on roles with useful detail instead of noisy listings.",
+      "Search organized job records, compare useful role details, and spend less time sorting through duplicate or incomplete listings.",
     icon: <FaSearch />
   },
   {
-    title: "Swipe-style review",
+    title: "Fast role review",
     description:
-      "Ignore, save, report unavailable, or send a role to AI apply flow with quick keyboard and card actions.",
+      "Ignore, save, report unavailable roles, or move a promising job into your application workflow with simple card actions.",
     icon: <FaBookmark />
   },
   {
     title: "Official apply links",
     description:
-      "Prioritize jobs with external application URLs so users can open the company application page directly.",
+      "Prioritize roles that include external application URLs, so you can continue on the company or employer application page.",
     icon: <FaBriefcase />
   },
   {
-    title: "AI cover letters",
+    title: "AI-assisted materials",
     description:
-      "Use Gemini with your resume and optional cover letter template to draft company-specific application material.",
+      "Use Gemini with your resume and optional templates to draft role-specific cover letters and application content for review.",
     icon: <FaMagic />
   },
   {
     title: "Application tracker",
     description:
-      "Move opportunities through saved, applying, submitted, interviewing, offer, rejected, or closed states.",
+      "Keep each opportunity in a clear status, from saved and applying through submitted, interviewing, offer, rejected, or closed.",
     icon: <FaClipboardList />
   },
   {
     title: "Profile and materials",
     description:
-      "Store personal details, resume files, and reusable templates that power future application workflows.",
+      "Manage your profile details, resume files, and reusable templates in one place before you start applying.",
     icon: <FaUserEdit />
   }
 ];
 
-const platformItems = ["Company roles", "Official apply pages", "Fresh openings", "Profile-matched leads"];
+const platformItems = ["Public job records", "Company apply pages", "Clean role details", "Profile-aware matching"];
 
 const companyRows = [
   [
@@ -117,22 +117,22 @@ const faqItems = [
   {
     question: "Does it apply to jobs automatically?",
     answer:
-      "The current flow focuses on finding structured job leads, opening official apply links, preparing materials, and tracking decisions. Fully automated application submission can be added later with review controls."
+      "The current product focuses on finding structured job leads, preparing materials, opening apply links, and tracking your progress. You stay in control before anything is submitted."
   },
   {
     question: "Why use official apply links?",
     answer:
-      "Official company application pages usually capture richer screening context than one-click platform applications, and they give users more control over what is submitted."
+      "Company or employer application pages often include the most complete instructions and screening questions. Opening those pages directly helps you review exactly what will be submitted."
   },
   {
     question: "Can I review AI-generated material first?",
     answer:
-      "Yes. The platform is designed around review-first workflows: generate drafts from your resume and template, then decide what to send."
+      "Yes. AI output is treated as a draft. You can review, edit, and decide whether it is appropriate for the role before using it."
   },
   {
     question: "Where does job data come from?",
     answer:
-      "The user-facing site reads clean records from the database. A separate admin/crawler flow can collect and update roles from major job platforms."
+      "The user-facing site reads structured records from the database. A separate admin workflow can collect, clean, and update public role information before it appears in search."
   }
 ];
 
@@ -156,11 +156,12 @@ export function LandingPage() {
 
       <section className="landing-hero">
         <div className="landing-hero-content">
-          <p className="landing-pill"><FaMagic /> AI job search workspace</p>
-          <h1>Find the jobs that fit you best, then use AI to prepare stronger applications.</h1>
+          <p className="landing-pill"><FaMagic /> AI-assisted job search</p>
+          <h1>Find relevant jobs faster and prepare stronger applications with AI support.</h1>
           <p>
-            JobSeekingAgent helps you collect better job leads, review them quickly,
-            generate tailored application material, and keep every opportunity moving.
+            JobSeekingAgent brings job discovery, resume context, cover letter drafting,
+            and application tracking into one workflow, so you can focus on the roles
+            that are actually worth your time.
           </p>
           <div className="landing-hero-actions">
             <Link className="btn btn-primary btn-lg" to="/register">Start for free</Link>
@@ -169,13 +170,18 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="company-proof-section" aria-label="Pre-vetted company roles">
+      <section className="company-proof-section" aria-label="Company role discovery">
         <div className="company-proof-copy">
-          <p className="eyebrow">Company-sourced openings</p>
-          <h2>Verified company roles, matched to your search.</h2>
+          <p className="eyebrow">Company role discovery</p>
+          <h2>Track public openings from companies people actively search for.</h2>
           <p>
-            We verify company signals before roles reach your feed, then use our own matching
-            logic to surface openings that better fit your profile and goals.
+            JobSeekingAgent is designed to organize publicly available role information,
+            enrich it with cleaner details, and rank opportunities against your profile
+            and search goals.
+          </p>
+          <p>
+            Company names shown here are examples of roles users may search for; no
+            partnership or endorsement is implied.
           </p>
         </div>
         <div className="company-marquee" aria-hidden="true">
@@ -207,7 +213,7 @@ export function LandingPage() {
           <div className="preview-job-card">
             <div className="preview-status">Review</div>
             <div>
-              <p className="preview-source">LinkedIn · Official apply</p>
+              <p className="preview-source">Public listing · Apply link available</p>
               <h2>Backend Software Engineer</h2>
               <p>Cloud platform team · Full-time · Hybrid</p>
               <div className="preview-tags">
@@ -225,7 +231,7 @@ export function LandingPage() {
           <div className="preview-side-stack">
             <div>
               <strong>Cover letter</strong>
-              <span>Gemini draft ready</span>
+              <span>AI draft ready to review</span>
             </div>
             <div>
               <strong>Tracker</strong>
@@ -234,11 +240,11 @@ export function LandingPage() {
           </div>
         </div>
         <div className="landing-section-copy">
-          <p className="eyebrow">Built around the search flow</p>
-          <h2>From discovery to application, every module supports the next step.</h2>
+          <p className="eyebrow">Built around the application flow</p>
+          <h2>Move from job search to application prep without losing context.</h2>
           <p>
-            The platform keeps job data structured, makes review fast, and connects your
-            profile materials to AI drafting when you are ready to apply.
+            Each saved role can keep its description, company information, apply link,
+            notes, generated drafts, and application status connected in one place.
           </p>
         </div>
       </section>
@@ -246,10 +252,10 @@ export function LandingPage() {
       <section className="landing-section landing-automation">
         <div className="automation-copy">
           <p className="landing-pill subtle"><FaPlay /> Workflow preview</p>
-          <h2>Review jobs like cards, then turn good matches into application tasks.</h2>
+          <h2>Review jobs quickly, then turn the right matches into application tasks.</h2>
           <p>
-            Move from discovery to action without losing context. Every saved role can carry its
-            description, official apply URL, generated material, and application status forward.
+            Use card actions to decide what to ignore, save, or prepare next. When a role
+            looks promising, keep its details available for AI drafting and follow-up tracking.
           </p>
         </div>
         <div className="automation-timeline">
@@ -263,7 +269,7 @@ export function LandingPage() {
       <section className="landing-section">
         <div className="landing-section-heading">
           <p className="eyebrow">What is included</p>
-          <h2>A complete toolkit for active job seekers.</h2>
+          <h2>Practical tools for a more organized job search.</h2>
         </div>
         <div className="landing-feature-grid">
           {features.map((feature) => (
@@ -278,12 +284,12 @@ export function LandingPage() {
 
       <section className="landing-band">
         <div>
-          <p className="eyebrow">Smarter job matching</p>
-          <h2>We collect roles from many companies, then surface the ones that fit you best.</h2>
+          <p className="eyebrow">Cleaner matching</p>
+          <h2>Organize public job information, then prioritize roles that better match your profile.</h2>
           <p>
-            JobSeekingAgent gathers openings from company sources, cleans the role details,
-            and uses our own matching logic to prioritize jobs that better align with your
-            profile, materials, and search goals.
+            The platform is built to turn scattered job records into a cleaner feed with
+            searchable details, apply links when available, and ranking signals based on
+            your experience, preferences, and materials.
           </p>
         </div>
         <div className="landing-platform-list">
@@ -294,7 +300,7 @@ export function LandingPage() {
       <section className="landing-section landing-flow">
         <div className="landing-section-heading">
           <p className="eyebrow">How it works</p>
-          <h2>A calmer way to handle applications.</h2>
+          <h2>A more controlled way to manage applications.</h2>
         </div>
         <div className="landing-steps">
           <span><FaSearch /> Search roles</span>
@@ -309,7 +315,7 @@ export function LandingPage() {
       <section className="landing-section landing-faq">
         <div className="landing-section-heading">
           <p className="eyebrow">FAQ</p>
-          <h2>Clear answers before you create an account.</h2>
+          <h2>What to know before creating an account.</h2>
         </div>
         <div className="landing-faq-list">
           {faqItems.map((item) => (
@@ -322,8 +328,8 @@ export function LandingPage() {
       </section>
 
       <section className="landing-cta">
-        <h2>Ready to build your application pipeline?</h2>
-        <p>Create an account, verify your email, and start setting up your profile.</p>
+        <h2>Start with a cleaner job search workspace.</h2>
+        <p>Create an account, verify your email, and set up your profile when you are ready.</p>
         <Link className="btn btn-primary btn-lg" to="/register">Create account</Link>
       </section>
 
@@ -333,7 +339,7 @@ export function LandingPage() {
             <span className="brand-mark">JSA</span>
             <span>JobSeekingAgent</span>
           </Link>
-          <p>AI-assisted job discovery, materials, and application tracking.</p>
+          <p>Job discovery, application materials, and progress tracking with AI-assisted drafting.</p>
         </div>
         <div className="landing-footer-links">
           <Link to="/login">Log in</Link>
